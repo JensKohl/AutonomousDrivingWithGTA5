@@ -22,3 +22,4 @@ How is it structured:
 
 ## What needs yet to be done:
 * improve model accuracy by getting more and more images and curating them: currently difficult for the model to distinguish between braking and accelerating...
+* Train loooonger :-)
