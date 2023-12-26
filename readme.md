@@ -17,7 +17,7 @@ How is it structured:
 * model.py: the class file for the CNN model
 * prepare_data.py: copoies the grabbed screens into a specific tree structure which can be used by data augmentations.
 * test_model.py: functions to test the model with images 
-* train_model.py: trains the CNN model
+* train_model_CNN.py: trains the CNN model
 * train_transfer_learning.py: trains the Transfer learning model
 
 ## What needs yet to be done:
