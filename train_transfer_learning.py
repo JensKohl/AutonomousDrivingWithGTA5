@@ -1,13 +1,11 @@
-"""
-Module provides train functions to train transfer learning models
-"""
-import time
 import torch
-from torchvision import transforms, datasets
+from torchvision import transforms, datasets, models
 import numpy as np
 import matplotlib.pyplot as plt
+import splitfolders
 from torch.optim import Adam
-from torch import nn
+import torch.nn as nn
+from model import CNNModel
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -15,30 +13,15 @@ from sklearn.metrics import (
     f1_score,
     confusion_matrix,
 )
-from model import CNNModel
 
 
 def imshow(img):
-    """
-    show an image
-    Args:
-        img(numpy array): image
-    Returns:
-        -
-    """
     img = img / 2 + 0.5  # unnormalize
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
 
 def show_augmentations():
-    """
-    show image augmentations
-    Args:
-        -
-    Returns:
-        -
-    """
     images, labels = next(iter(train_loader))
     fig = plt.figure(figsize=(20, 10))
     for i in range(10):
@@ -50,58 +33,39 @@ def show_augmentations():
     plt.show()
 
 
-def train_model(model2train, train_epoch_number):
-    """
-    train the model
-    Args:
-        model2train(model): PyTorch model to train
-        train_epoch_number(int): number of epochs to train
-    Returns:
-        -
-    """
-    criterion = (
-        nn.CrossEntropyLoss()
-    )  # used if there are different classes for the label
+def train_model(model2train, epoch_number):
+    criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model2train.parameters(), lr=0.001, weight_decay=0.0001)
 
-    # iterate through all epochs
-    for epoch in range(train_epoch_number):
-        model2train.train()  # set model into training mode
-        total_loss = 0.0  # reinitialize loss for each epoch
+    for epoch in range(epoch_number):
+        model2train.train()
+        total_loss = 0.0
 
         # this for loop goes through each image and its label
         for images, labels in train_loader:
-            images, labels = images.to(device), labels.to(
-                device
-            )  # push images and labels onto the GPU
+            # push images and labels onto the GPU
+            images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()  # zero the parameter gradients for each new pic
-            outputs = model2train(
+            outputs, _ = model2train(
                 images
             )  # "forward" the image through the model and get a prediction
             loss = criterion(
                 outputs, labels
-            )  # compare predicted output with real label to get loss
-            loss.backward()  # propagate loss backwards through whole, update all neurons
+            )  # compare the prediction/ output with the real label to get the loss
+            loss.backward()  # propagate the loss backwards, that is through the whole net so all involved neurons can update
             optimizer.step()  # next step
-            total_loss += loss.item()  # add up loss
+            total_loss += loss.item()
+
             print(
-                f"Epoch {epoch + 1}/{train_epoch_number}, Loss: {total_loss / len(train_loader)}"
+                f"Epoch {epoch + 1}/{max_epoch_number}, Loss: {total_loss / len(train_loader)}"
             )  # print current loss, i.e. how good is the model in which episode?
 
     print("Training finished")
+
     return model2train
 
 
 def validate_model(model, dataloader, criterion):
-    """
-    validate the model
-    Args:
-        model2train(model): PyTorch model to train
-        dataloader(dataloader): PyTorch dataloader with image data
-        criterion(criterion): PyTorch criterion to compute loss
-    Returns:
-        -
-    """
     model.eval()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -150,6 +114,7 @@ if __name__ == "__main__":
     print(
         torch.cuda.is_available()
     )  # check if GPU is available, because they massively speed up training
+
     torch.cuda.empty_cache()  # clear GPU memory....
 
     # build the data transformer including image augmentations
@@ -176,12 +141,21 @@ if __name__ == "__main__":
         ]
     )
 
+    test_transform = transforms.Compose(
+        [
+            transforms.Resize((300, 300)),
+            transforms.ToTensor(),  # convert to tensor
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+        ]
+    )
+
     train_data = datasets.ImageFolder(
         "inputimages/train/", transform=train_transforms
     )  # load data from training directory in train_data dataloader
     validation_data = datasets.ImageFolder(
         "inputimages/val/", transform=validation_transform
     )
+    test_data = datasets.ImageFolder("inputimages/test/", transform=test_transform)
 
     n_classes = len(
         train_data.classes
@@ -190,10 +164,11 @@ if __name__ == "__main__":
 
     print("Number of training images: ", len(train_data))
     print("Number of validation images: ", len(validation_data))
+    print("Number of test images: ", len(test_data))
     print("Number of target classes: ", n_classes)
 
-    BATCH_SIZE = 64
-    NUM_WORKERS = 4
+    BATCH_SIZE = 128  # normally we should take a batch size higher than 32, e.g. 64...but Colab crashed regularly with more than 32.
+    NUM_WORKERS = 2
 
     # Using the image datasets and the trainforms, define the dataloaders
     train_loader = torch.utils.data.DataLoader(
@@ -202,15 +177,39 @@ if __name__ == "__main__":
     val_loader = torch.utils.data.DataLoader(
         validation_data, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True
     )
+    test_loader = torch.utils.data.DataLoader(
+        test_data, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True
+    )
 
-    MAX_EPOCH_NUMBER = 300
+    max_epoch_number = 300
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    model = CNNModel(n_classes).to(device)  # put model onto GPU
 
-    start_training = time.time()
+    Inception_Model = models.inception_v3()
 
-    trained_model = train_model(model, MAX_EPOCH_NUMBER)
+    for param in Inception_Model.parameters():
+        param.requires_grad = False  # Freeze all layers initially
+
+    # Unfreeze specific layers if needed
+    for child in Inception_Model.children():
+        if isinstance(child, nn.Sequential):
+            for param in child.parameters():
+                param.requires_grad = True
+
+    # Modify the classifier head for binary classification
+    num_ftrs = Inception_Model.fc.in_features
+
+    Inception_Model.fc = nn.Sequential(
+        nn.Linear(num_ftrs, 256),
+        nn.ReLU(),
+        nn.Dropout(0.5),
+        nn.Linear(
+            256, n_classes
+        ),  # Change the output size to match your number of classes
+    )
+
+    Inception_Model.to(device)
+    trained_inception_model = train_model(Inception_Model, max_epoch_number)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -221,15 +220,6 @@ if __name__ == "__main__":
         validation_precision,
         validation_recall,
         validation_f1,
-    ) = validate_model(model, val_loader, criterion)
+    ) = validate_model(trained_inception_model, val_loader, criterion)
 
-    end_training = time.time()
-
-    # Save the entire model, including architecture and parameters
-    torch.save(trained_model, "models/model.pth")
-
-    print(
-        "Training took {} seconds or {} minutes".format(
-            end_training - start_training, (end_training - start_training) / 60
-        )
-    )
+    torch.save(trained_inception_model, "models/Inception.pth")

@@ -1,0 +1,3 @@
+[TYPECHECK]
+ignored-modules=torch, cv2
+ignored-classes=torch

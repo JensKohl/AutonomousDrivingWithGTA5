@@ -1,10 +1,18 @@
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+"""
+Module provides test functions for trained transfer learning model
+"""
+
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+)
 import torch
-from torchvision import transforms, datasets, models
+from torchvision import transforms, datasets
 import numpy as np
-import matplotlib.pyplot as plt
-from torch.optim import Adam
-import torch.nn as nn
+from torch import nn
 import cv2
 
 def test_model(model, test_loader, criterion):
@@ -30,21 +38,25 @@ def test_model(model, test_loader, criterion):
     with torch.no_grad():
         for inputs, labels in test_loader:
             inputs, labels = inputs.to(device), labels.to(device)
-            outputs = model(inputs) # Forward pass
+            outputs = model(inputs)  # Forward pass
 
-            loss = criterion(outputs, labels) # Compute loss
-            total_loss += loss.item() # and add up
+            loss = criterion(outputs, labels)  # Compute loss
+            total_loss += loss.item()  # and add up
 
-            probabilities = torch.softmax(outputs, dim=1) # Convert logits to probabilities and get predicted class
-            predicted_class = torch.argmax(probabilities, dim=1) # from predictions take the one with the highest value
+            probabilities = torch.softmax(
+                outputs, dim=1
+            )  # Convert logits to probabilities and get predicted class
+            predicted_class = torch.argmax(
+                probabilities, dim=1
+            )  # from predictions take the one with the highest value
 
             all_predictions.extend(predicted_class.cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
 
     accuracy = accuracy_score(all_labels, all_predictions)
-    precision = precision_score(all_labels, all_predictions, average='weighted')
-    recall = recall_score(all_labels, all_predictions, average='weighted')
-    f1 = f1_score(all_labels, all_predictions, average='weighted')
+    precision = precision_score(all_labels, all_predictions, average="weighted")
+    recall = recall_score(all_labels, all_predictions, average="weighted")
+    f1 = f1_score(all_labels, all_predictions, average="weighted")
 
     print(f"Test Loss: {total_loss / len(test_loader)}")
     print(f"Accuracy: {accuracy}")
@@ -59,8 +71,17 @@ def test_model(model, test_loader, criterion):
 
     return accuracy, precision, recall, f1
 
-def process_image(filepath):
-    image = cv2.imread(filepath)
+
+def process_image(file_path):
+    """
+    process an image
+    Args:
+        file_path (string): path to a file
+
+    Returns:
+        image (np.array): image as numpy array of int values
+    """
+    image = cv2.imread(file_path)
 
     # Resize the image to the model's input size
     image = cv2.resize(image, (300, 300))
@@ -72,56 +93,82 @@ def process_image(filepath):
 
     return image
 
+
 def test_single_image(model, image_path):
+    """
+    passes a single image through the model
+    Args:
+        model(model): the model to test
+        image_path (string): path to a file
+
+    Returns:
+        image (np.array): image as numpy array of int values
+    """
     model.eval()
     device = next(model.parameters()).device
     image = process_image(image_path)
 
     # Convert the preprocessed image to a PyTorch tensor
-    image_tensor = torch.tensor(image.transpose(2, 0, 1), dtype=torch.float32).unsqueeze(0).to(device)
+    image_tensor = (
+        torch.tensor(image.transpose(2, 0, 1), dtype=torch.float32)
+        .unsqueeze(0)
+        .to(device)
+    )
 
     with torch.no_grad():
-        outputs = model(image_tensor) # Forward pass
+        outputs = model(image_tensor)  # Forward pass
         # Convert logits to probabilities and get predicted class
         probabilities = torch.softmax(outputs, dim=1)
         predicted_class = torch.argmax(probabilities, dim=1).item()
     return predicted_class
 
+
 if __name__ == "__main__":
+    print(
+        torch.cuda.is_available()
+    )  # check if GPU is available, because they massively speed up training
+    torch.cuda.empty_cache()  # clear GPU memory....
 
-    print(torch.cuda.is_available()) #check if GPU is available, because they massively speed up training
-    torch.cuda.empty_cache() # clear GPU memory....
+    test_transform = transforms.Compose(
+        [
+            transforms.Resize((300, 300)),
+            transforms.ToTensor(),  # convert to tensorcl
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+        ]
+    )
 
-    test_transform = transforms.Compose([
-        transforms.Resize((300,300)),
-        transforms.ToTensor(), # convert to tensorcl
-        transforms.Normalize(mean = [0.5, 0.5, 0.5],
-                             std = [0.5, 0.5, 0.5])])
-
-    batch_size = 64  # normally we should take a batch size higher than 32, e.g. 64...but Colab crashed regularly with more than 32.
-    num_workers=2
+    BATCH_SIZE = 64
+    NUM_WORKERS = 2
 
     test_data = datasets.ImageFolder("inputimages/test/", transform=test_transform)
-    n_classes = len(test_data.classes) # the 4 target classes: accelerate, decelerate, left, right
-    test_loader = torch.utils.data.DataLoader(test_data, batch_size = batch_size, num_workers = num_workers, shuffle = True)
+    n_classes = len(
+        test_data.classes
+    )  # the 4 target classes: accelerate, decelerate, left, right
+    test_loader = torch.utils.data.DataLoader(
+        test_data, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True
+    )
 
-    print('Number of test images: ', len(test_data))
+    print("Number of test images: ", len(test_data))
 
     trained_model = torch.load("models/model.pth")
     trained_model.eval()
 
     criterion = nn.CrossEntropyLoss()
 
-    test_accuracy, test_precision, test_recall, test_f1 = test_model(trained_model, test_loader, criterion)
+    test_accuracy, test_precision, test_recall, test_f1 = test_model(
+        trained_model, test_loader, criterion
+    )
 
     Inception_model = torch.load("models/Inception.pth")
     Inception_model.eval()
 
-    test_accuracy, test_precision, test_recall, test_f1 = test_model(Inception_model, test_loader, criterion)
+    test_accuracy, test_precision, test_recall, test_f1 = test_model(
+        Inception_model, test_loader, criterion
+    )
 
-    testfile = "inputimages/test/accelerate/202311110439.jpg"
+    TEST_FILE = "inputimages/test/accelerate/202311110439.jpg"
 
     class_labels = ["accelerate", "decelerate", "left", "right"]
 
-    prediction = test_single_image(Inception_model, testfile)
-    print("PREDICTION:{} has result: {}".format(testfile, class_labels[prediction]))
+    prediction = test_single_image(Inception_model, TEST_FILE)
+    print("PREDICTION:{} has result: {}".format(TEST_FILE, class_labels[prediction]))
