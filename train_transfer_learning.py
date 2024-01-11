@@ -1,11 +1,13 @@
+"""
+Module provides train functions to train transfer learning models
+"""
+
 import torch
 from torchvision import transforms, datasets, models
 import numpy as np
 import matplotlib.pyplot as plt
-import splitfolders
 from torch.optim import Adam
-import torch.nn as nn
-from model import CNNModel
+from torch import nn
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -16,12 +18,26 @@ from sklearn.metrics import (
 
 
 def imshow(img):
+    """
+    show image 
+    Args:
+        img(numpy array): image as numpy array
+    Returns:
+        -
+    """
     img = img / 2 + 0.5  # unnormalize
     npimg = img.numpy()
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
 
 def show_augmentations():
+    """
+    show image augmentations
+    Args:
+        -
+    Returns:
+        -
+    """
     images, labels = next(iter(train_loader))
     fig = plt.figure(figsize=(20, 10))
     for i in range(10):
@@ -33,11 +49,19 @@ def show_augmentations():
     plt.show()
 
 
-def train_model(model2train, epoch_number):
+def train_model(model2train, train_epoch_number):
+    """
+    train the model
+    Args:
+        model2train(model): PyTorch model to train
+        train_epoch_number(int): number of epochs to train
+    Returns:
+        -
+    """
     criterion = nn.CrossEntropyLoss()
     optimizer = Adam(model2train.parameters(), lr=0.001, weight_decay=0.0001)
 
-    for epoch in range(epoch_number):
+    for epoch in range(train_epoch_number):
         model2train.train()
         total_loss = 0.0
 
@@ -52,12 +76,12 @@ def train_model(model2train, epoch_number):
             loss = criterion(
                 outputs, labels
             )  # compare the prediction/ output with the real label to get the loss
-            loss.backward()  # propagate the loss backwards, that is through the whole net so all involved neurons can update
+            loss.backward()  # propagate loss backwards through whole net so all neurons can update
             optimizer.step()  # next step
             total_loss += loss.item()
 
             print(
-                f"Epoch {epoch + 1}/{max_epoch_number}, Loss: {total_loss / len(train_loader)}"
+                f"Epoch {epoch + 1}/{train_epoch_number}, Loss: {total_loss / len(train_loader)}"
             )  # print current loss, i.e. how good is the model in which episode?
 
     print("Training finished")
@@ -66,6 +90,15 @@ def train_model(model2train, epoch_number):
 
 
 def validate_model(model, dataloader, criterion):
+    """
+    validate the model
+    Args:
+        model2train(model): PyTorch model to train
+        dataloader(dataloader): PyTorch dataloader with image data
+        criterion(criterion): PyTorch criterion to compute loss
+    Returns:
+        -
+    """
     model.eval()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model.to(device)
@@ -167,7 +200,7 @@ if __name__ == "__main__":
     print("Number of test images: ", len(test_data))
     print("Number of target classes: ", n_classes)
 
-    BATCH_SIZE = 128  # normally we should take a batch size higher than 32, e.g. 64...but Colab crashed regularly with more than 32.
+    BATCH_SIZE = 128
     NUM_WORKERS = 2
 
     # Using the image datasets and the trainforms, define the dataloaders
@@ -181,7 +214,7 @@ if __name__ == "__main__":
         test_data, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True
     )
 
-    max_epoch_number = 300
+    MAX_EPOCH_NUMBER = 300
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -209,7 +242,7 @@ if __name__ == "__main__":
     )
 
     Inception_Model.to(device)
-    trained_inception_model = train_model(Inception_Model, max_epoch_number)
+    trained_inception_model = train_model(Inception_Model, MAX_EPOCH_NUMBER)
 
     criterion = nn.CrossEntropyLoss()
 

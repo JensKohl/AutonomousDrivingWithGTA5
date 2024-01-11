@@ -1,5 +1,5 @@
 """
-Module provides train functions to train transfer learning models
+Module provides train functions to train CNN model
 """
 import time
 import torch
