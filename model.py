@@ -1,20 +1,21 @@
 """
 Module provides CNN model
 """
-from torch.nn import nn
-#import torch.nn.functional as F
+from torch import nn
+
+# import torch.nn.functional as F
 
 
 class CNNModel(nn.Module):
-    '''
-        The CNN model as a PyTorch class
-        Args:
-            nn.Module: PyTorch neural network object
-        Attributes:
-    '''
+    """
+    The CNN model as a PyTorch class
+    Args:
+        nn.Module: PyTorch neural network object
+    Attributes:
+    """
 
     def __init__(self, n_classes):
-        '''Inits the model
+        """Inits the model
         Args:
             distance (int): The amount of distance traveled
             n_classes (int): 4 directions
@@ -22,7 +23,7 @@ class CNNModel(nn.Module):
             -
         Returns:
             -
-        '''
+        """
         super(CNNModel, self).__init__()
 
         # First Convolutional Layer
@@ -52,7 +53,7 @@ class CNNModel(nn.Module):
         self.fc3 = nn.Linear(256, n_classes)
 
     def forward(self, x):
-        '''Forward pass for the model
+        """Forward pass for the model
         Args:
             self: model itself
             x: Input
@@ -60,7 +61,7 @@ class CNNModel(nn.Module):
             -
         Returns:
             -
-        '''
+        """
         # Forward pass through the network
         x = self.pool1(self.relu1(self.conv1(x)))
         x = self.pool2(self.relu2(self.conv2(x)))

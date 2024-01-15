@@ -10,70 +10,11 @@ import cv2
 import mss  # make screenshots if multiple screens are available, i.e. laptop and another monitor.
 import torch
 from torchvision import transforms
-from directkeys import PressKey, ReleaseKey, W, A, S, D
-
-def accelerate():
-    """function to give command accelerate via keypress
-    Args:
-        -
-    Returns:
-        -
-    """
-    print("accelerate")
-    PressKey(W)
-    ReleaseKey(A)
-    ReleaseKey(D)
-
-def decelerate():
-    """function to give command decelerate via keypress
-    Args:
-        -
-    Returns:
-        -
-    """
-    print("decelerate")
-    PressKey(S)
-    # ReleaseKey(W)
-    # ReleaseKey(A)
-    # ReleaseKey(D)
-    ReleaseKey(S)
-
-
-def left():
-    """function to give command steer left via keypress
-    Args:
-        -
-    Returns:
-        -
-    """
-    print("driving left")
-    # PressKey(W)
-    PressKey(A)
-    # time.sleep(0.1)
-    ReleaseKey(W)
-    ReleaseKey(D)
-    ReleaseKey(A)
-    # ReleaseKey(S)
-
-def right():
-    """function to give command steer right via keypress
-    Args:
-        -
-    Returns:
-        -
-    """
-    print("driving right")
-    # PressKey(W)
-    PressKey(D)
-    # time.sleep(0.1)
-    ReleaseKey(W)
-    ReleaseKey(A)
-    ReleaseKey(D)
-    # ReleaseKey()
-
+import keyboard
+from driving_commands import accelerate, steer_left, steer_right #, decelerate currently not used
 
 def grab_screen(monitor_number):
-    """ grab screen depending on monitor number and
+    """grab screen depending on monitor number and
         return image as 600x600 RGB pixel via opencv2 library
     Args:
         monitor_number (int): number of monitor (0 = all monitors, 1 = laptop, 2 = monitor)
@@ -122,6 +63,10 @@ if __name__ == "__main__":
 
             image_tensor = preprocess(screen).unsqueeze(0).to(device)
 
+            if keyboard.is_pressed("x"):
+                print("You pressed 'x'. Quitting....")
+                break
+
             with torch.no_grad():
                 outputs = CNN_model(image_tensor[0])
 
@@ -130,29 +75,33 @@ if __name__ == "__main__":
                 direction = predicted_class_idx.item()
                 print(direction)
 
-                # todo: send keyboard press to GTA!!
-
+                # NOTE: deceleration not used at the moment
+                # accelerate
                 if direction == 0:
-                    # press w
                     # print("up\n")
                     # PressKey(0x11)
                     # ReleaseKey(0x11)
                     accelerate()
+
+                # decelerate, currently not used
                 # elif direction == 1:
                 # press s
                 # print("down\n")
                 # PressKey(0x1F)
                 # ReleaseKey(0x1F)
                 # decelerate()
-                elif direction == 2:
+                # steer left. if decelerate commented out, this is 2
+                elif direction == 1: # steer left;
                     # press a
                     # print("left\n")
                     # PressKey(0x1E)
                     # ReleaseKey(0x1E)
-                    left()
+                    steer_left()
+
+                # steer right. if decelerate commented out, this is 3
                 elif direction == 3:
                     print("right\n")
                     # press d
                     # PressKey(0x20)
                     # ReleaseKey(0x20)
-                    right()
+                    steer_right()

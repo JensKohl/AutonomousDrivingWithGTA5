@@ -19,7 +19,7 @@ from sklearn.metrics import (
 
 def imshow(img):
     """
-    show image 
+    show image
     Args:
         img(numpy array): image as numpy array
     Returns:
@@ -229,7 +229,7 @@ if __name__ == "__main__":
             for param in child.parameters():
                 param.requires_grad = True
 
-    # Modify the classifier head for binary classification
+    # Modify the classifier head for classification
     num_ftrs = Inception_Model.fc.in_features
 
     Inception_Model.fc = nn.Sequential(

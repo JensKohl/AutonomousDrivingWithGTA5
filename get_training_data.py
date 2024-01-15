@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import numpy as np
 import cv2
+
 # we need this library to monitor if specific keys are pressed.
 # In our case "w" and "s" for accelerating or braking and "a" and "d" for steering -
 # and of course their combination, e.g. "wa", "wd", "sa"
@@ -13,6 +14,7 @@ from pynput import (
     keyboard,
 )
 import mss  # make screenshots if multiple screens are available, i.e. laptop and another monitor.
+
 
 def test_screenshots():
     """
@@ -96,6 +98,7 @@ def on_press(key):
 
         if key == keyboard.Key.esc:
             return False
+
 
 def on_release(key):
     """

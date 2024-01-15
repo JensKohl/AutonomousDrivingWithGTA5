@@ -1,5 +1,5 @@
 """
-Module overrides keys so our functions can send key commands to GTA5.
+Module overrides keys so functions from this project can send key commands to the GTA5 game.
 source code taken from https://github.com/Gautam-J/Self-Driving-Car/blob/master/directkeys.py
 """
 
@@ -16,6 +16,7 @@ ESC = 0x01
 
 # C struct redefinitions
 PUL = ctypes.POINTER(ctypes.c_ulong)
+
 
 class KeyBdInput(ctypes.Structure):
     _fields_ = [

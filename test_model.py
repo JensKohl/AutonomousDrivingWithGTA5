@@ -98,7 +98,7 @@ def test_single_image(model, image_path):
     """
     passes a single image through the model
     Args:
-        model(model): the model to test
+        model(model): the model to
         image_path (string): path to a file
 
     Returns:
@@ -171,4 +171,4 @@ if __name__ == "__main__":
     class_labels = ["accelerate", "decelerate", "left", "right"]
 
     prediction = test_single_image(Inception_model, TEST_FILE)
-    print("PREDICTION:{} has result: {}".format(TEST_FILE, class_labels[prediction]))
+    print(f"PREDICTION:{TEST_FILE} has result: {class_labels[prediction]}")

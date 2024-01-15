@@ -227,9 +227,5 @@ if __name__ == "__main__":
 
     # Save the entire model, including architecture and parameters
     torch.save(trained_model, "models/model.pth")
-
-    print(
-        "Training took {} seconds or {} minutes".format(
-            end_training - start_training, (end_training - start_training) / 60
-        )
-    )
+    print(f"Training took {end_training - start_training} seconds or\
+          {(end_training - start_training) / 60} minutes")
