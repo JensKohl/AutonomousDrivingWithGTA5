@@ -150,7 +150,9 @@ if __name__ == "__main__":
 
     print("Number of test images: ", len(test_data))
 
-    trained_model = torch.load("models/model.pth")
+    print("Test CNN model")
+
+    trained_model = torch.load("models/cnn_model.pth")
     trained_model.eval()
 
     criterion = nn.CrossEntropyLoss()
@@ -159,16 +161,21 @@ if __name__ == "__main__":
         trained_model, test_loader, criterion
     )
 
-    Inception_model = torch.load("models/Inception.pth")
-    Inception_model.eval()
+    print("-----------------------------------------")
+    print("-----------------------------------------")
+
+    print("Test Transfer Learning model")
+
+    transfer_learning_model = torch.load("models/TF_Learning.pth")
+    transfer_learning_model.eval()
 
     test_accuracy, test_precision, test_recall, test_f1 = test_model(
-        Inception_model, test_loader, criterion
+        transfer_learning_model, test_loader, criterion
     )
 
-    TEST_FILE = "inputimages/test/accelerate/202311110439.jpg"
+    #TEST_FILE = "inputimages/test/accelerate/202311110439.jpg"
 
-    class_labels = ["accelerate", "decelerate", "left", "right"]
+    #class_labels = ["accelerate", "decelerate", "left", "right"]
 
-    prediction = test_single_image(Inception_model, TEST_FILE)
-    print(f"PREDICTION:{TEST_FILE} has result: {class_labels[prediction]}")
+    #prediction = test_single_image(transfer_learning_model, TEST_FILE)
+    #print(f"PREDICTION:{TEST_FILE} has result: {class_labels[prediction]}")

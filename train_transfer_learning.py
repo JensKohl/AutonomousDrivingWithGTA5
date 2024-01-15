@@ -3,6 +3,7 @@ Module provides train functions to train transfer learning models
 """
 
 import torch
+import ssl
 from torchvision import transforms, datasets, models
 import numpy as np
 import matplotlib.pyplot as plt
@@ -70,7 +71,12 @@ def train_model(model2train, train_epoch_number):
             # push images and labels onto the GPU
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()  # zero the parameter gradients for each new pic
-            outputs, _ = model2train(
+
+            # for Inception
+            #outputs, _ = model2train(
+
+            # for EfficientNet
+            outputs = model2train(
                 images
             )  # "forward" the image through the model and get a prediction
             loss = criterion(
@@ -154,7 +160,7 @@ if __name__ == "__main__":
     train_transforms = transforms.Compose(
         [
             transforms.Resize((300, 300)),
-            transforms.RandomRotation(30),  # rotate image 30 degrees
+            transforms.RandomRotation(10),  # rotate image 30 degrees
             transforms.ColorJitter(
                 brightness=0.5,
                 hue=0.3,
@@ -193,14 +199,16 @@ if __name__ == "__main__":
     n_classes = len(
         train_data.classes
     )  # the 4 target classes: accelerate, decelerate, left, right
-    classes = ["accelerate", "decelerate", "left", "right"]
+    # CHANGE JENS 15.01.2024
+    #classes = ["accelerate", "decelerate", "left", "right"]
+    classes = ["accelerate", "left", "right"]
 
     print("Number of training images: ", len(train_data))
     print("Number of validation images: ", len(validation_data))
     print("Number of test images: ", len(test_data))
     print("Number of target classes: ", n_classes)
 
-    BATCH_SIZE = 128
+    BATCH_SIZE = 32
     NUM_WORKERS = 2
 
     # Using the image datasets and the trainforms, define the dataloaders
@@ -218,31 +226,39 @@ if __name__ == "__main__":
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    Inception_Model = models.inception_v3()
+    ssl._create_default_https_context = ssl._create_unverified_context
 
-    for param in Inception_Model.parameters():
+    # Inception Transfer learning
+    #transfer_learning_model = models.inception_v3()
+
+    # Efficient Net
+    transfer_learning_model = models.efficientnet_b0(weights ="EfficientNet_B0_Weights.DEFAULT")
+
+    for param in transfer_learning_model.parameters():
         param.requires_grad = False  # Freeze all layers initially
 
     # Unfreeze specific layers if needed
-    for child in Inception_Model.children():
+    for child in transfer_learning_model.children():
         if isinstance(child, nn.Sequential):
             for param in child.parameters():
                 param.requires_grad = True
 
-    # Modify the classifier head for classification
-    num_ftrs = Inception_Model.fc.in_features
+    # Inception: Modify the classifier head for classification
+    #num_ftrs = transfer_learning_model.fc.in_features
+    #transfer_learning_model.fc = nn.Sequential(
+    #    nn.Linear(num_ftrs, 256),
+    #    nn.ReLU(),
+    #    nn.Dropout(0.5),
+    #    nn.Linear(
+    #        256, n_classes
+    #    ),  # Change the output size to match your number of classes
+    #)
 
-    Inception_Model.fc = nn.Sequential(
-        nn.Linear(num_ftrs, 256),
-        nn.ReLU(),
-        nn.Dropout(0.5),
-        nn.Linear(
-            256, n_classes
-        ),  # Change the output size to match your number of classes
-    )
+    # Efficient Net
+    transfer_learning_model.classifier[1] = nn.Linear(in_features=1280, out_features=n_classes)
 
-    Inception_Model.to(device)
-    trained_inception_model = train_model(Inception_Model, MAX_EPOCH_NUMBER)
+    transfer_learning_model.to(device)
+    trained_transfer_learning_model = train_model(transfer_learning_model, MAX_EPOCH_NUMBER)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -253,6 +269,6 @@ if __name__ == "__main__":
         validation_precision,
         validation_recall,
         validation_f1,
-    ) = validate_model(trained_inception_model, val_loader, criterion)
+    ) = validate_model(trained_transfer_learning_model, val_loader, criterion)
 
-    torch.save(trained_inception_model, "models/Inception.pth")
+    torch.save(trained_transfer_learning_model, "models/TF_Learning.pth")

@@ -226,6 +226,5 @@ if __name__ == "__main__":
     end_training = time.time()
 
     # Save the entire model, including architecture and parameters
-    torch.save(trained_model, "models/model.pth")
-    print(f"Training took {end_training - start_training} seconds or\
-          {(end_training - start_training) / 60} minutes")
+    torch.save(trained_model, "models/cnn_model.pth")
+    print(f"Training took {end_training - start_training} sec. or {(end_training - start_training) / 60} minutes")
