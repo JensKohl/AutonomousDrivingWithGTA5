@@ -58,11 +58,11 @@ if __name__ == "__main__":
     )  # check if GPU is available, because they massively speed up training
     torch.cuda.empty_cache()  # clear GPU memory....
 
-    Inception_model = torch.load("models/Inception.pth")
+    tf_model = torch.load("models/TF_Learning.pth")
     print("Model loaded")
-    Inception_model.eval()
+    tf_model.eval()
 
-    device = next(Inception_model.parameters()).device
+    device = next(tf_model.parameters()).device
 
     preprocess = transforms.Compose(
         [
@@ -88,10 +88,10 @@ if __name__ == "__main__":
                 break
 
             with torch.no_grad():
-                outputs = Inception_model(image_tensor)
+                outputs = tf_model(image_tensor)
                 probabilities = torch.softmax(outputs, dim=1)
                 predicted_direction = torch.argmax(probabilities, dim=1).item()
-                print(predicted_direction)
+                #print(predicted_direction)
 
                 # NOTE: deceleration not used at the moment
                 if predicted_direction == 0:

@@ -73,12 +73,12 @@ if __name__ == "__main__":
                 _, predicted_class_idx = outputs.max(1)
 
                 direction = predicted_class_idx.item()
-                print(direction)
+                #print(direction)
 
                 # NOTE: deceleration not used at the moment
                 # accelerate
                 if direction == 0:
-                    # print("up\n")
+                    print("Accelerating...\n")
                     # PressKey(0x11)
                     # ReleaseKey(0x11)
                     accelerate()
@@ -86,21 +86,21 @@ if __name__ == "__main__":
                 # decelerate, currently not used
                 # elif direction == 1:
                 # press s
-                # print("down\n")
+                # print("Decelerating....\n")
                 # PressKey(0x1F)
                 # ReleaseKey(0x1F)
                 # decelerate()
                 # steer left. if decelerate commented out, this is 2
                 elif direction == 1: # steer left;
                     # press a
-                    # print("left\n")
+                    print("Driving left\n")
                     # PressKey(0x1E)
                     # ReleaseKey(0x1E)
                     steer_left()
 
                 # steer right. if decelerate commented out, this is 3
                 elif direction == 3:
-                    print("right\n")
+                    print("Driving right\n")
                     # press d
                     # PressKey(0x20)
                     # ReleaseKey(0x20)
