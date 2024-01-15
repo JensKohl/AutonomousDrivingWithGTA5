@@ -2,12 +2,12 @@
 
 ## Lesson 9 - CNN
 
-This project shall show students how to use Convolutional Neural Networks for the very well known use case *Autonomous driving* on the example of GTA5.
-Although -of course- GTA Vice City is still the best GTA ever, I had the well-known problems with the steam edition of GTA Vice City and a current Windows version.
+This project shall show students how to use Convolutional Neural Networks and Transfer Learning for the very well known use case *Autonomous driving* on the example of GTA5.
+Although -of course- GTA Vice City is still the best GTA ever, I had some well-known problems with the steam edition of GTA Vice City under Windows version >7.
 
 That's why we are using GTA 5....
 
-This work is under construction and in contrast to the lecture I am using here PyTorch.
+In contrast to the lecture I am using PyTorch here.
 
 How is it structured:
 * directkeys.py: file with the key codes necessary to overload i.e. enable drive_vehicle.py to send key commands to GTA 5.
@@ -22,5 +22,11 @@ How is it structured:
 * train_transfer_learning.py: trains the Transfer learning model
 
 ## What needs yet to be done:
-* improve model accuracy by getting more and more images and curating them: it's currently difficult for the model to distinguish between braking and accelerating...
-* Train loooonger :-)
+* train looonger to improve model accuracy by getting more and more images (drive longer with function get_training_data.py in background).
+* curating images: it's currently difficult for the model to distinguish between braking and accelerating...that's why braking is currently commented out. Also erase accidents
+* when driving while training: adhere to traffic rules such as staying in lane, stopping at red light, ... :-)
+
+
+## Possible future improvements:
+* analyze images before feeding into model: lane detection
+* try different model architectures for CNN or transfer learning
