@@ -160,15 +160,15 @@ if __name__ == "__main__":
     train_transforms = transforms.Compose(
         [
             transforms.Resize((300, 300)),
-            transforms.RandomRotation(10),  # rotate image 30 degrees
+            transforms.RandomRotation(5),  # rotate image 30 degrees
             transforms.ColorJitter(
                 brightness=0.5,
                 hue=0.3,
                 contrast=0.5,
             ),  # modify contrast, brightness or hue with parameter as given probability
-            transforms.RandomGrayscale(0.20),  # random grayscaling given probability
+            transforms.RandomGrayscale(0.10),  # random grayscaling given probability
             transforms.ToTensor(),  # convert to tensor
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
 
@@ -176,7 +176,7 @@ if __name__ == "__main__":
         [
             transforms.Resize((300, 300)),
             transforms.ToTensor(),  # convert to tensor
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
 
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         [
             transforms.Resize((300, 300)),
             transforms.ToTensor(),  # convert to tensor
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
 
@@ -222,17 +222,19 @@ if __name__ == "__main__":
         test_data, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, shuffle=True
     )
 
-    MAX_EPOCH_NUMBER = 300
+    MAX_EPOCH_NUMBER = 400
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    ssl._create_default_https_context = ssl._create_unverified_context
+    #import ssl
+    #ssl._create_default_https_context = ssl._create_unverified_context
 
     # Inception Transfer learning
     #transfer_learning_model = models.inception_v3()
 
     # Efficient Net
     transfer_learning_model = models.efficientnet_b0(weights ="EfficientNet_B0_Weights.DEFAULT")
+    #transfer_learning_model = models.efficientnet_v2_l(weights ="EfficientNet_V2_L_Weights.DEFAULT")
 
     for param in transfer_learning_model.parameters():
         param.requires_grad = False  # Freeze all layers initially
